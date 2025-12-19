@@ -15,6 +15,14 @@ import (
 	"github.com/BaseMax/go-taskflow/pkg/types"
 )
 
+const (
+	// Shell command constants
+	windowsShell = "cmd.exe"
+	windowsFlag  = "/c"
+	unixShell    = "sh"
+	unixFlag     = "-c"
+)
+
 // Executor handles execution of different task types
 type Executor struct {
 	variables map[string]string
@@ -69,9 +77,9 @@ func (e *Executor) executeShell(ctx context.Context, task types.Task) (string, e
 	// Use appropriate shell based on OS
 	var cmd *exec.Cmd
 	if runtime.GOOS == "windows" {
-		cmd = exec.CommandContext(ctx, "cmd.exe", "/c", command)
+		cmd = exec.CommandContext(ctx, windowsShell, windowsFlag, command)
 	} else {
-		cmd = exec.CommandContext(ctx, "sh", "-c", command)
+		cmd = exec.CommandContext(ctx, unixShell, unixFlag, command)
 	}
 
 	var stdout, stderr bytes.Buffer
