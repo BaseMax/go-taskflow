@@ -1,0 +1,27 @@
+name: Retry and Error Handling
+description: Demonstrate retry logic and error handling
+
+tasks:
+  - name: task-with-retry
+    type: shell
+    command: echo "Attempting task..." && exit 1
+    retry:
+      max_attempts: 3
+      delay: 1s
+    continue_on_error: true
+
+  - name: successful-task
+    type: shell
+    command: echo "This task runs even if previous failed"
+    depends_on:
+      - task-with-retry
+
+  - name: conditional-task
+    type: shell
+    command: echo "This runs based on condition"
+    condition: ${run_conditional} == "yes"
+    depends_on:
+      - successful-task
+
+variables:
+  run_conditional: "no"

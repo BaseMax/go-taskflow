@@ -1,0 +1,39 @@
+name: Parallel Tasks Example
+description: Demonstrate parallel task execution
+
+variables:
+  worker_count: "3"
+
+tasks:
+  - name: prepare
+    type: shell
+    command: echo "Preparing parallel execution with ${worker_count} workers"
+
+  - name: worker-1
+    type: shell
+    command: echo "Worker 1 starting" && sleep 1 && echo "Worker 1 done"
+    depends_on:
+      - prepare
+    parallel: true
+
+  - name: worker-2
+    type: shell
+    command: echo "Worker 2 starting" && sleep 1 && echo "Worker 2 done"
+    depends_on:
+      - prepare
+    parallel: true
+
+  - name: worker-3
+    type: shell
+    command: echo "Worker 3 starting" && sleep 1 && echo "Worker 3 done"
+    depends_on:
+      - prepare
+    parallel: true
+
+  - name: finalize
+    type: shell
+    command: echo "All workers completed!"
+    depends_on:
+      - worker-1
+      - worker-2
+      - worker-3

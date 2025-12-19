@@ -1,0 +1,27 @@
+name: HTTP Request Example
+description: Make HTTP calls to APIs
+
+tasks:
+  - name: get-github-status
+    type: http
+    url: https://api.github.com/status
+    method: GET
+    headers:
+      User-Agent: TaskFlow/1.0
+
+  - name: get-example
+    type: http
+    url: https://jsonplaceholder.typicode.com/posts/1
+    method: GET
+    depends_on:
+      - get-github-status
+
+  - name: post-example
+    type: http
+    url: https://jsonplaceholder.typicode.com/posts
+    method: POST
+    headers:
+      Content-Type: application/json
+    body: '{"title": "TaskFlow Test", "body": "Testing HTTP POST", "userId": 1}'
+    depends_on:
+      - get-example
