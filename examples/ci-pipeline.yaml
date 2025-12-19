@@ -1,0 +1,83 @@
+name: Complete CI/CD Pipeline Example
+description: A realistic example showing a complete workflow with dependencies
+
+variables:
+  app_name: "myapp"
+  version: "1.0.0"
+  build_dir: "/tmp/build"
+
+tasks:
+  - name: setup
+    type: shell
+    command: |
+      echo "Setting up build environment for ${app_name} v${version}"
+      mkdir -p ${build_dir}
+
+  - name: lint
+    type: shell
+    command: echo "Running linter... ✓"
+    depends_on:
+      - setup
+    parallel: true
+
+  - name: unit-tests
+    type: shell
+    command: echo "Running unit tests... ✓"
+    depends_on:
+      - setup
+    parallel: true
+
+  - name: integration-tests
+    type: shell
+    command: echo "Running integration tests... ✓"
+    depends_on:
+      - setup
+    parallel: true
+
+  - name: build
+    type: shell
+    command: echo "Building ${app_name}..." && sleep 2 && echo "Build complete ✓"
+    depends_on:
+      - lint
+      - unit-tests
+      - integration-tests
+
+  - name: security-scan
+    type: shell
+    command: echo "Running security scan... ✓"
+    depends_on:
+      - build
+    parallel: true
+
+  - name: generate-docs
+    type: shell
+    command: echo "Generating documentation... ✓"
+    depends_on:
+      - build
+    parallel: true
+
+  - name: package
+    type: shell
+    command: echo "Packaging ${app_name} v${version}... ✓"
+    depends_on:
+      - security-scan
+      - generate-docs
+
+  - name: deploy-staging
+    type: shell
+    command: echo "Deploying to staging environment... ✓"
+    depends_on:
+      - package
+
+  - name: smoke-tests
+    type: shell
+    command: echo "Running smoke tests on staging... ✓"
+    depends_on:
+      - deploy-staging
+
+  - name: cleanup
+    type: shell
+    command: rm -rf ${build_dir} && echo "Cleanup complete ✓"
+    depends_on:
+      - smoke-tests
+    continue_on_error: true

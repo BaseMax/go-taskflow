@@ -1,0 +1,45 @@
+name: File Operations Example
+description: Demonstrate file read, write, copy, and delete operations
+
+variables:
+  test_dir: "/tmp/taskflow-test"
+
+tasks:
+  - name: create-directory
+    type: shell
+    command: mkdir -p ${test_dir}
+
+  - name: write-file
+    type: file
+    file_action: write
+    file_path: ${test_dir}/hello.txt
+    file_content: "Hello from TaskFlow!\nThis is a test file."
+    depends_on:
+      - create-directory
+
+  - name: read-file
+    type: file
+    file_action: read
+    file_path: ${test_dir}/hello.txt
+    depends_on:
+      - write-file
+
+  - name: copy-file
+    type: file
+    file_action: copy
+    source_path: ${test_dir}/hello.txt
+    dest_path: ${test_dir}/hello-copy.txt
+    depends_on:
+      - read-file
+
+  - name: verify-copy
+    type: shell
+    command: cat ${test_dir}/hello-copy.txt
+    depends_on:
+      - copy-file
+
+  - name: cleanup
+    type: shell
+    command: rm -rf ${test_dir}
+    depends_on:
+      - verify-copy

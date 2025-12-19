@@ -1,0 +1,23 @@
+name: Simple Shell Example
+description: Execute basic shell commands
+
+variables:
+  greeting: "Hello"
+  name: "TaskFlow"
+
+tasks:
+  - name: print-hello
+    type: shell
+    command: echo "${greeting} from ${name}!"
+
+  - name: list-files
+    type: shell
+    command: ls -la
+    depends_on:
+      - print-hello
+
+  - name: date
+    type: shell
+    command: date
+    depends_on:
+      - print-hello
