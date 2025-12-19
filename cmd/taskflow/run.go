@@ -42,7 +42,7 @@ var runCmd = &cobra.Command{
 		fmt.Println()
 
 		results, err := engine.Run(ctx)
-		
+
 		elapsed := time.Since(startTime)
 		fmt.Println()
 		fmt.Println("═══════════════════════════════════════════")

@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os"
 	"os/exec"
+	"runtime"
 	"strings"
 	"time"
 
@@ -65,7 +66,14 @@ func (e *Executor) executeShell(ctx context.Context, task types.Task) (string, e
 	// Replace variables in command
 	command = e.replaceVariables(command)
 
-	cmd := exec.CommandContext(ctx, "sh", "-c", command)
+	// Use appropriate shell based on OS
+	var cmd *exec.Cmd
+	if runtime.GOOS == "windows" {
+		cmd = exec.CommandContext(ctx, "cmd.exe", "/c", command)
+	} else {
+		cmd = exec.CommandContext(ctx, "sh", "-c", command)
+	}
+
 	var stdout, stderr bytes.Buffer
 	cmd.Stdout = &stdout
 	cmd.Stderr = &stderr
@@ -149,7 +157,7 @@ func (e *Executor) fileRead(task types.Task) (string, error) {
 func (e *Executor) fileWrite(task types.Task) (string, error) {
 	filePath := e.replaceVariables(task.FilePath)
 	content := e.replaceVariables(task.FileContent)
-	
+
 	err := os.WriteFile(filePath, []byte(content), 0644)
 	if err != nil {
 		return "", fmt.Errorf("failed to write file: %w", err)
