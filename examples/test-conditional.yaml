@@ -1,0 +1,24 @@
+name: Conditional Test
+description: Test conditional execution
+
+variables:
+  env: "staging"
+
+tasks:
+  - name: always-run
+    type: shell
+    command: echo "This always runs"
+
+  - name: staging-task
+    type: shell
+    command: echo "This runs in staging"
+    condition: ${env} == "staging"
+    depends_on:
+      - always-run
+
+  - name: prod-task
+    type: shell
+    command: echo "This runs in production"
+    condition: ${env} == "production"
+    depends_on:
+      - always-run

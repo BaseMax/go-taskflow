@@ -1,0 +1,179 @@
+name: Advanced Features Demo
+description: Comprehensive example showcasing all TaskFlow capabilities
+
+variables:
+  project_name: "advanced-demo"
+  environment: "staging"
+  version: "2.0.0"
+  config_dir: "/tmp/taskflow-advanced"
+  api_endpoint: "https://jsonplaceholder.typicode.com"
+
+tasks:
+  # Setup phase
+  - name: init-workspace
+    type: shell
+    command: |
+      echo "🚀 Initializing workspace for ${project_name}"
+      mkdir -p ${config_dir}
+      echo "Environment: ${environment}" > ${config_dir}/info.txt
+
+  # Parallel preparation tasks
+  - name: check-dependencies
+    type: shell
+    command: echo "✓ Checking dependencies..." && sleep 1 && echo "All dependencies available"
+    depends_on:
+      - init-workspace
+    parallel: true
+
+  - name: validate-config
+    type: shell
+    command: echo "✓ Validating configuration..." && sleep 1 && echo "Configuration valid"
+    depends_on:
+      - init-workspace
+    parallel: true
+
+  - name: security-scan-prep
+    type: shell
+    command: echo "✓ Preparing security scan..." && sleep 1 && echo "Security scan ready"
+    depends_on:
+      - init-workspace
+    parallel: true
+
+  # File operations with variables
+  - name: create-config
+    type: file
+    file_action: write
+    file_path: ${config_dir}/config.json
+    file_content: |
+      {
+        "project": "${project_name}",
+        "version": "${version}",
+        "environment": "${environment}",
+        "timestamp": "2025-12-19"
+      }
+    depends_on:
+      - check-dependencies
+      - validate-config
+      - security-scan-prep
+
+  - name: read-and-verify
+    type: file
+    file_action: read
+    file_path: ${config_dir}/config.json
+    depends_on:
+      - create-config
+
+  # HTTP request with retry
+  - name: fetch-api-data
+    type: http
+    url: ${api_endpoint}/posts/1
+    method: GET
+    retry:
+      max_attempts: 3
+      delay: 2s
+    depends_on:
+      - create-config
+
+  # Conditional execution
+  - name: staging-deployment
+    type: shell
+    command: echo "📦 Deploying to staging environment..."
+    condition: ${environment} == "staging"
+    depends_on:
+      - read-and-verify
+      - fetch-api-data
+
+  - name: production-deployment
+    type: shell
+    command: echo "🚀 Deploying to production environment..."
+    condition: ${environment} == "production"
+    depends_on:
+      - read-and-verify
+      - fetch-api-data
+
+  # Backup operations
+  - name: backup-config
+    type: file
+    file_action: copy
+    source_path: ${config_dir}/config.json
+    dest_path: ${config_dir}/config.backup.json
+    depends_on:
+      - staging-deployment
+
+  # Final verification with timeout
+  - name: health-check
+    type: shell
+    command: |
+      echo "Running health check..."
+      sleep 2
+      echo "✓ Health check passed"
+    timeout: 10s
+    depends_on:
+      - backup-config
+
+  # Task with controlled failure and retry
+  - name: flaky-operation
+    type: shell
+    command: |
+      if [ -f ${config_dir}/retry.marker ]; then
+        echo "✓ Operation succeeded on retry"
+        exit 0
+      else
+        echo "Creating marker for next attempt"
+        touch ${config_dir}/retry.marker
+        exit 1
+      fi
+    retry:
+      max_attempts: 2
+      delay: 1s
+    continue_on_error: false
+    depends_on:
+      - health-check
+
+  # Parallel final tasks
+  - name: generate-report
+    type: shell
+    command: echo "📊 Generating deployment report..." && sleep 1
+    depends_on:
+      - flaky-operation
+    parallel: true
+
+  - name: send-notification
+    type: shell
+    command: echo "📧 Sending notification..." && sleep 1
+    depends_on:
+      - flaky-operation
+    parallel: true
+
+  - name: update-metrics
+    type: shell
+    command: echo "📈 Updating metrics..." && sleep 1
+    depends_on:
+      - flaky-operation
+    parallel: true
+
+  # Cleanup with error tolerance
+  - name: cleanup
+    type: shell
+    command: |
+      echo "🧹 Cleaning up temporary files..."
+      rm -rf ${config_dir}
+      echo "Cleanup complete"
+    continue_on_error: true
+    depends_on:
+      - generate-report
+      - send-notification
+      - update-metrics
+
+  # Final summary
+  - name: summary
+    type: shell
+    command: |
+      echo "════════════════════════════════════════"
+      echo "✨ Deployment Complete!"
+      echo "════════════════════════════════════════"
+      echo "Project: ${project_name} v${version}"
+      echo "Environment: ${environment}"
+      echo "════════════════════════════════════════"
+    depends_on:
+      - cleanup

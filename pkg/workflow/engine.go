@@ -206,7 +206,9 @@ func (e *Engine) evaluateCondition(condition string) bool {
 		parts := strings.Split(condition, "==")
 		if len(parts) == 2 {
 			left := strings.TrimSpace(parts[0])
-			right := strings.TrimSpace(strings.Trim(parts[1], "\"'"))
+			right := strings.TrimSpace(parts[1])
+			// Remove surrounding quotes from right side
+			right = strings.Trim(right, "\"'")
 			return left == right
 		}
 	}
@@ -215,7 +217,9 @@ func (e *Engine) evaluateCondition(condition string) bool {
 		parts := strings.Split(condition, "!=")
 		if len(parts) == 2 {
 			left := strings.TrimSpace(parts[0])
-			right := strings.TrimSpace(strings.Trim(parts[1], "\"'"))
+			right := strings.TrimSpace(parts[1])
+			// Remove surrounding quotes from right side
+			right = strings.Trim(right, "\"'")
 			return left != right
 		}
 	}
